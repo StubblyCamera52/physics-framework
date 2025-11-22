@@ -1,4 +1,5 @@
 import type { RenderState } from "../canvas/canvas";
+import { clamp } from "../math/helper";
 import { Vector2 } from "../math/vector2";
 import type { Body } from "./bodies";
 import { AABBintersectAABB, type Pair, type Manifold } from "./types";
@@ -40,7 +41,7 @@ export class StandardWorld implements PhysicsWorld {
     this.bodies.forEach((b) => {
       if (b.isStatic) return;
 
-      b.velocity.y += 40 * dt;
+      b.velocity.y += 98 * dt;
       b.position = b.position.add(b.velocity.scalarMul(dt));
       b.boundingBox = {
         min: b.position.sub(b.size.scalarDiv(2)),
@@ -48,7 +49,7 @@ export class StandardWorld implements PhysicsWorld {
       };
     });
     
-    for (let i = 0; i < 1; i++) {
+    for (let i = 0; i < 10; i++) {
       this.calculateCollisionInformation();
       this.resolveCollisions();
       
@@ -149,10 +150,10 @@ export class StandardWorld implements PhysicsWorld {
         let aToB = bodyB.position.sub(bodyA.position);
 
         let r = radiusA + radiusB;
-        r *= r;
+        let r2 = r*r;
 
         // they have not actually collided
-        if (aToB.lengthSquared() > r) {
+        if (aToB.lengthSquared() > r2) {
           return false;
         }
 
@@ -170,6 +171,56 @@ export class StandardWorld implements PhysicsWorld {
             penetration: radiusA,
             normal: new Vector2(0, -1),
           });
+        }
+      } else if ((bodyA.primitiveType == "aabb" && bodyB.primitiveType == "circle") || (bodyA.primitiveType == "circle" && bodyB.primitiveType == "aabb")) {
+        if (bodyA.primitiveType == "circle") {
+          let temp = structuredClone(bodyA);
+          bodyA = structuredClone(bodyB);
+          bodyB = structuredClone(temp);
+        }
+        let aToB = bodyB.position.sub(bodyA.position);
+
+        let closest = new Vector2(aToB.x, aToB.y);
+
+        let xExtent = (bodyA.boundingBox.max.x - bodyA.boundingBox.min.x) / 2;
+        let yExtent = (bodyA.boundingBox.max.y - bodyA.boundingBox.min.y) / 2;
+
+        closest.x = clamp(closest.x, -xExtent, xExtent);
+        closest.y = clamp(closest.y, -yExtent, yExtent);
+
+        let inside = false;
+
+        // circle is inside aabb
+        if (aToB.x === closest.x && aToB.y === closest.y) {
+          inside = true;
+
+          if (Math.abs(aToB.x) > Math.abs(aToB.y)) {
+            if (closest.x > 0) {
+              closest.x = xExtent;
+            } else {
+              closest.x = -xExtent;
+            }
+          } else {
+            if (closest.y > 0) {
+              closest.y = yExtent;
+            } else {
+              closest.y = -yExtent;
+            }
+          }
+        }
+
+        let normal = aToB.sub(closest);
+        let dist = normal.lengthSquared();
+        let radius = bodyB.size.x/2;
+
+        if (dist > (radius*radius) && !inside) return false;
+
+        dist = Math.sqrt(dist);
+
+        if (inside) {
+          this.collisions.add({pair: {a: bodyA.id, b: bodyB.id}, normal: normal.scalarMul(-1).normalize(), penetration: radius-dist});
+        } else {
+          this.collisions.add({pair: {a: bodyA.id, b: bodyB.id}, normal: normal.normalize(), penetration: radius-dist})
         }
       }
     });

@@ -18,22 +18,6 @@ export interface Body {
   toRenderState: () => RenderState;
 }
 
-// class CircleBody implements Body {
-//   id: string;
-//   position: Vector2;
-//   velocity: Vector2;
-//   boundingBox: AABB;
-//   radius: number;
-
-//   constructor(id: string, x: number, y: number, radius: number) {
-//     this.id = id;
-//     this.position = new Vector2(x, y);
-//     this.velocity = new Vector2(0, 0);
-//     this.radius = 20;
-//     this.boundingBox = {min: new Vector2(x - this.radius, y - this.radius), max: new Vector2(x + this.radius, y + this.radius)}
-//   }
-// }
-
 export class SquareBody implements Body {
   id: string;
   position: Vector2;
@@ -56,6 +40,32 @@ export class SquareBody implements Body {
   toRenderState(): RenderState {
     return {x: this.position.x, y: this.position.y, w: this.size.x, h: this.size.y, id: this.id} as RenderState;
   }
+
+  
+}
+
+export class CircleBody implements Body {
+  id: string;
+  position: Vector2;
+  velocity: Vector2;
+  boundingBox: AABB;
+  size: Vector2;
+  isStatic = false;
+  mass = 1;
+  restitution = 0;
+  primitiveType = "circle" as "circle";
+
+  constructor(id: string, x: number, y: number, size: number) {
+    this.id = id;
+    this.position = new Vector2(x, y);
+    this.velocity = new Vector2(0, 0);
+    this.size = new Vector2(size, size);
+    this.boundingBox = {min: this.position.sub(this.size.scalarDiv(2)), max: this.position.add(this.size.scalarDiv(2))};
+  }
+
+  toRenderState(): RenderState {
+    return {x: this.position.x, y: this.position.y, w: this.size.x, h: this.size.y, id: this.id} as RenderState;
+  }
 }
 
 export class StaticRectBody implements Body {
@@ -65,8 +75,8 @@ export class StaticRectBody implements Body {
   boundingBox: AABB;
   size: Vector2;
   isStatic = true;
-  mass = 100;
-  restitution = 0.2;
+  mass = 9999;
+  restitution = 0;
   primitiveType = "aabb" as "aabb";
 
   constructor(id: string, x: number, y: number, w: number, h: number) {
