@@ -11,7 +11,7 @@ export interface Body {
   mass: number;
   restitution: number;
 
-  primitiveType: "circle" | "rect";
+  primitiveType: "circle" | "aabb";
 
   isStatic: boolean;
 
@@ -43,7 +43,7 @@ export class SquareBody implements Body {
   isStatic = false;
   mass = 1;
   restitution = 0;
-  primitiveType = "rect" as "rect";
+  primitiveType = "aabb" as "aabb";
 
   constructor(id: string, x: number, y: number, size: number) {
     this.id = id;
@@ -67,7 +67,7 @@ export class StaticRectBody implements Body {
   isStatic = true;
   mass = 1;
   restitution = 0;
-  primitiveType = "rect" as "rect";
+  primitiveType = "aabb" as "aabb";
 
   constructor(id: string, x: number, y: number, w: number, h: number) {
     this.id = id;

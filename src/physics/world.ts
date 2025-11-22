@@ -44,8 +44,11 @@ export class StandardWorld implements PhysicsWorld {
       b.boundingBox = {min: b.position.sub(b.size.scalarDiv(2)), max: b.position.add(b.size.scalarDiv(2))};
     });
 
-    this.calculateCollisionInformation();
-    this.resolveCollisions();
+    for (let i = 0; i < 10; i++) {
+      this.calculateCollisionInformation();
+      this.resolveCollisions();
+    }
+
   }
 
   private calculateCollisionInformation() {
@@ -77,18 +80,64 @@ export class StandardWorld implements PhysicsWorld {
       let bodyB = this.bodies.get(pair.b);
       if (!bodyA || !bodyB) return;
 
-      if (bodyA.primitiveType == "rect" && bodyB.primitiveType == "rect") {
-        let collisionNormal;
-        const overlapX = Math.min(bodyA.boundingBox.max.x, bodyB.boundingBox.max.x) - Math.max(bodyA.boundingBox.min.x, bodyB.boundingBox.min.x);
-        const overlapY = Math.min(bodyA.boundingBox.max.y, bodyB.boundingBox.max.y) - Math.max(bodyA.boundingBox.min.y, bodyB.boundingBox.min.y);
-        const penetrationDepth = Math.min(overlapX, overlapY);
-        if (overlapX < overlapY) {
-          collisionNormal = new Vector2(bodyA.position.x < bodyB.position.x ? -1 : 1, 0);
-        } else {
-          collisionNormal = new Vector2(0, bodyA.position.y < bodyB.position.y ? 1 : -1);
+      if (bodyA.primitiveType == "aabb" && bodyB.primitiveType == "aabb") {
+        let aToB = bodyB.position.sub(bodyA.position);
+
+        let aExtent = (bodyA.boundingBox.max.x - bodyA.boundingBox.min.x)/2;
+        let bExtent = (bodyB.boundingBox.max.x - bodyB.boundingBox.min.x)/2;
+
+        let overlapX = (aExtent + bExtent) - Math.abs(aToB.x);
+
+        // SAT test x axis
+        if (overlapX > 0) {
+          aExtent = (bodyA.boundingBox.max.y - bodyA.boundingBox.min.y)/2;
+          bExtent = (bodyB.boundingBox.max.y - bodyB.boundingBox.min.y)/2;
+
+          let overlapY = (aExtent + bExtent) - Math.abs(aToB.y);
+
+          if (overlapY > 0) {
+            // find axis of least penetration
+            if (overlapX < overlapY) {
+              // point towards B
+              if (aToB.x < 0) {
+                this.collisions.add({pair, penetration: overlapX, normal: new Vector2(-1, 0)});
+              } else {
+                this.collisions.add({pair, penetration: overlapX, normal: new Vector2(0, 0)});
+              }
+            } else {
+              if (aToB.y < 0) {
+                this.collisions.add({pair, penetration: overlapY, normal: new Vector2(0, -1)});
+              } else {
+                this.collisions.add({pair, penetration: overlapY, normal: new Vector2(0, 1)});
+              }
+            }
+          }
+        }
+      } else if (bodyA.primitiveType == "circle" && bodyB.primitiveType == "circle") {
+        let radiusA = bodyA.size.x/2;
+        let radiusB = bodyB.size.x/2;
+
+        let aToB = bodyB.position.sub(bodyA.position);
+
+        let r = radiusA+radiusB;
+        r *= r;
+
+        // they have not actually collided
+        if (aToB.lengthSquared() > r) {
+          return false;
         }
 
-        this.collisions.add({pair, penetration: penetrationDepth, normal: collisionNormal});
+        let dist = aToB.length();
+
+        if (dist != 0) {
+          const penetration = r - dist;
+          const collisionNormal = aToB.scalarDiv(dist);
+
+          this.collisions.add({pair, penetration, normal: collisionNormal});
+        } else {
+          // circles are same pos
+          this.collisions.add({pair, penetration: radiusA, normal: new Vector2(0, -1)});
+        }
       }
     });
   }

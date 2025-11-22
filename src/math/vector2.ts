@@ -32,12 +32,16 @@ export class Vector2 implements vec2 {
     return (this.x * b.x) + (this.y * b.y);
   }
 
-  magnitude(): number {
+  length(): number {
     return Math.sqrt(this.x*this.x + this.y*this.y);
+  }
+  
+  lengthSquared(): number {
+    return (this.x*this.x + this.y*this.y);
   }
 
   normalize(): Vector2 {
-    const length = this.magnitude();
+    const length = this.length();
     return new Vector2(this.x/length, this.y/length);
   }
 }
