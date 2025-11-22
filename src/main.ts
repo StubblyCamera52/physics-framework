@@ -14,11 +14,11 @@ if (ctx != null) {
 let world = new StandardWorld();
 let baseLayer = new Layer();
 
-let square1 = new SquareBody("0", 50, 50, 20);
+let square1 = new SquareBody("1", 150, 250, 20);
+square1.velocity.x = 10;
 let squareRenderer1 = new RectRenderer(square1.id);
 
-let square2 = new SquareBody("1", 150, 250, 20);
-square2.velocity.x = -10;
+let square2 = new SquareBody("2", 250, 50, 20);
 let squareRenderer2 = new RectRenderer(square2.id);
 
 baseLayer.add(squareRenderer1);
@@ -45,7 +45,7 @@ function animate(timestamp: number) {
 
   // console.log(dt/1000);
 
-  world.update(dt/1000);
+  world.update(dt / 1000);
 
   if (ctx != null) {
     baseLayer.clear(ctx);
