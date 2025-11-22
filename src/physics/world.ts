@@ -37,7 +37,7 @@ export class StandardWorld implements PhysicsWorld {
     this.bodies.forEach((b) => {
       if (b.isStatic) return;
 
-      b.velocity = b.velocity.add(new Vector2(0, 9*dt));
+      b.velocity = b.velocity.add(new Vector2(0, 0/* 9*dt */));
       b.position = b.position.add(b.velocity);
       b.boundingBox = {min: b.position.sub(b.size.scalarDiv(2)), max: b.position.add(b.size.scalarDiv(2))};
     });
@@ -63,7 +63,7 @@ export class StandardWorld implements PhysicsWorld {
       return AABBintersectAABB(aabb1, aabb2);
     });
 
-    console.log(pairs);
+    // console.log(pairs);
     
     pairs.forEach((pair) => {
       let bodyA = this.bodies.get(pair.a);
@@ -71,7 +71,21 @@ export class StandardWorld implements PhysicsWorld {
       if (!bodyA || !bodyB) return;
 
       const collisionNormal = bodyA.position.sub(bodyB.position).normalize();
-      console.log(collisionNormal);
+
+      let relVelocity = bodyB.velocity.sub(bodyA.velocity);
+      let velocityAlongNorm = relVelocity.dot(collisionNormal);
+      if (velocityAlongNorm > 0) return; // do not resolve if the bodies are already seperating
+
+      let restitution = Math.min(bodyA.restitution, bodyB.restitution);
+
+      // impulse scalar
+      let iScal = -(1 + restitution) * velocityAlongNorm;
+      iScal /= (1/bodyA.mass) + (1/bodyB.mass);
+
+      // apply the impulse
+      let impulse = collisionNormal.scalarMul(iScal);
+      bodyA.velocity = bodyA.velocity.sub(impulse.scalarMul(1/bodyA.mass));
+      bodyB.velocity = bodyB.velocity.add(impulse.scalarMul(1/bodyB.mass));
     });
   }
 

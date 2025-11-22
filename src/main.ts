@@ -17,15 +17,15 @@ let baseLayer = new Layer();
 let square1 = new SquareBody("0", 50, 50, 20);
 let squareRenderer1 = new RectRenderer(square1.id);
 
-let square2 = new SquareBody("1", 50, 20, 20);
-let squareRenderer2 = new RectRenderer(square2.id);
+// let square2 = new SquareBody("1", 50, 20, 20);
+// let squareRenderer2 = new RectRenderer(square2.id);
 
 baseLayer.add(squareRenderer1);
 world.insertBody(square1);
-baseLayer.add(squareRenderer2);
-world.insertBody(square2);
+// baseLayer.add(squareRenderer2);
+// world.insertBody(square2);
 
-let ground = new StaticRectBody("ground", 150, 290, 280, 20);
+let ground = new StaticRectBody("ground", 50, 100, 20, 20);
 let groundRenderer = new RectRenderer(ground.id);
 baseLayer.add(groundRenderer);
 world.insertBody(ground);

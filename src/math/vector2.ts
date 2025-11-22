@@ -24,6 +24,10 @@ export class Vector2 implements vec2 {
     return new Vector2(this.x/b, this.y/b);
   }
 
+  scalarMul(b: number): Vector2 {
+    return new Vector2(this.x*b, this.y*b);
+  }
+
   dot(b: Vector2): number {
     return (this.x * b.x) + (this.y * b.y);
   }

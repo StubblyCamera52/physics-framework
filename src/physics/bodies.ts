@@ -8,6 +8,8 @@ export interface Body {
   velocity: Vector2;
   boundingBox: AABB;
   size: Vector2;
+  mass: number;
+  restitution: number;
 
   isStatic: boolean;
 
@@ -37,11 +39,13 @@ export class SquareBody implements Body {
   boundingBox: AABB;
   size: Vector2;
   isStatic = false;
+  mass = 1;
+  restitution = 0;
 
   constructor(id: string, x: number, y: number, size: number) {
     this.id = id;
     this.position = new Vector2(x, y);
-    this.velocity = new Vector2(0, 0);
+    this.velocity = new Vector2(0, 1);
     this.size = new Vector2(size, size);
     this.boundingBox = {min: this.position.sub(this.size.scalarDiv(2)), max: this.position.add(this.size.scalarDiv(2))};
   }
@@ -57,7 +61,9 @@ export class StaticRectBody implements Body {
   velocity: Vector2;
   boundingBox: AABB;
   size: Vector2;
-  isStatic = true;
+  isStatic = false;
+  mass = 1;
+  restitution = 0;
 
   constructor(id: string, x: number, y: number, w: number, h: number) {
     this.id = id;
