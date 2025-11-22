@@ -27,20 +27,24 @@ baseLayer.add(squareRenderer2);
 world.insertBody(square2);
 
 let ground = new StaticRectBody("ground", 150, 300, 300, 20);
+let ceiling = new StaticRectBody("ceiling", 150, 0, 300, 20);
 let wall1 = new StaticRectBody("wall1", 0, 150, 20, 300);
 let wall2 = new StaticRectBody("wall2", 300, 150, 20, 300);
 baseLayer.add(new RectRenderer(wall1.id));
 baseLayer.add(new RectRenderer(wall2.id));
 baseLayer.add(new RectRenderer(ground.id));
+baseLayer.add(new RectRenderer(ceiling.id));
 world.insertBody(ground);
+world.insertBody(ceiling);
 world.insertBody(wall1);
 world.insertBody(wall2);
 
-for (let i = 0; i < 20; i++) {
-  let x = (i % 5)*60 + 30;
-  let y = Math.floor(i/5)*30+15;
+for (let i = 0; i < 91; i++) {
+  let x = (i % 13)*20 + 30;
+  let y = Math.floor(i/13)*20+30;
 
   let ball = new CircleBody("ball".concat(i.toString()), x, y, 20);
+  ball.velocity.x = (Math.random()-0.5)*100 
   baseLayer.add(new CircleRenderer("ball".concat(i.toString())));
   world.insertBody(ball);
 }

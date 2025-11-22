@@ -52,7 +52,7 @@ export class CircleBody implements Body {
   size: Vector2;
   isStatic = false;
   mass = 1;
-  restitution = 0;
+  restitution = 1;
   primitiveType = "circle" as "circle";
 
   constructor(id: string, x: number, y: number, size: number) {
@@ -76,7 +76,7 @@ export class StaticRectBody implements Body {
   size: Vector2;
   isStatic = true;
   mass = 9999;
-  restitution = 0;
+  restitution = 0.2;
   primitiveType = "aabb" as "aabb";
 
   constructor(id: string, x: number, y: number, w: number, h: number) {
