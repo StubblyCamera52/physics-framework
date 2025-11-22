@@ -33,12 +33,13 @@ export class StandardWorld implements PhysicsWorld {
   }
   
   update(dt: number): void {
+    if (dt > 0.2) return;
     // update position, velocity, and AABB
     this.bodies.forEach((b) => {
       if (b.isStatic) return;
 
-      b.velocity = b.velocity.add(new Vector2(0, 0/* 9*dt */));
-      b.position = b.position.add(b.velocity);
+      b.velocity.y += 40*dt;
+      b.position = b.position.add(b.velocity.scalarMul(dt));
       b.boundingBox = {min: b.position.sub(b.size.scalarDiv(2)), max: b.position.add(b.size.scalarDiv(2))};
     });
 
@@ -70,7 +71,15 @@ export class StandardWorld implements PhysicsWorld {
       let bodyB = this.bodies.get(pair.b);
       if (!bodyA || !bodyB) return;
 
-      const collisionNormal = bodyA.position.sub(bodyB.position).normalize();
+      let collisionNormal;
+      const overlapX = Math.min(bodyA.boundingBox.max.x, bodyB.boundingBox.max.x) - Math.max(bodyA.boundingBox.min.x, bodyB.boundingBox.min.x);
+      const overlapY = Math.min(bodyA.boundingBox.max.y, bodyB.boundingBox.max.y) - Math.max(bodyA.boundingBox.min.y, bodyB.boundingBox.min.y);
+      const penetrationDepth = Math.min(overlapX, overlapY);
+      if (overlapX < overlapY) {
+        collisionNormal = new Vector2(bodyA.position.x < bodyB.position.x ? -1 : 1, 0);
+      } else {
+        collisionNormal = new Vector2(0, bodyA.position.y < bodyB.position.y ? 1 : -1);
+      }
 
       let relVelocity = bodyB.velocity.sub(bodyA.velocity);
       let velocityAlongNorm = relVelocity.dot(collisionNormal);
@@ -86,6 +95,29 @@ export class StandardWorld implements PhysicsWorld {
       let impulse = collisionNormal.scalarMul(iScal);
       bodyA.velocity = bodyA.velocity.sub(impulse.scalarMul(1/bodyA.mass));
       bodyB.velocity = bodyB.velocity.add(impulse.scalarMul(1/bodyB.mass));
+
+      // preform positional correction to stop "sinking"
+      const percent = 0.8;
+      const slop = 0.001;
+      
+      const depth = Math.max(penetrationDepth - slop, 0);
+
+      const invMassA = bodyA.isStatic ? 0 : 1/bodyA.mass;
+      const invMassB = bodyB.isStatic ? 0 : 1/bodyB.mass;
+
+      const invMassSum = invMassA + invMassB;
+      if (invMassSum == 0) return; // both are static bodies
+
+      const correctionAmount = (depth * percent)/invMassSum;
+      const correction = collisionNormal.scalarMul(correctionAmount);
+
+      if (!bodyA.isStatic) {
+        bodyA.position = bodyA.position.sub(correction.scalarMul(invMassA));
+      }
+
+      if (!bodyB.isStatic) {
+        bodyB.position = bodyB.position.add(correction.scalarMul(invMassB));
+      }
     });
   }
 

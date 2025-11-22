@@ -45,7 +45,7 @@ export class SquareBody implements Body {
   constructor(id: string, x: number, y: number, size: number) {
     this.id = id;
     this.position = new Vector2(x, y);
-    this.velocity = new Vector2(0, 1);
+    this.velocity = new Vector2(0, 0);
     this.size = new Vector2(size, size);
     this.boundingBox = {min: this.position.sub(this.size.scalarDiv(2)), max: this.position.add(this.size.scalarDiv(2))};
   }
@@ -61,7 +61,7 @@ export class StaticRectBody implements Body {
   velocity: Vector2;
   boundingBox: AABB;
   size: Vector2;
-  isStatic = false;
+  isStatic = true;
   mass = 1;
   restitution = 0;
 

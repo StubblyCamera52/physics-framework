@@ -17,3 +17,9 @@ export type Pair = {
   a: string; // id
   b: string;
 }
+
+export type Manifold = {
+  pair: Pair;
+  penetration: number;
+  normal: Vector2;
+}
