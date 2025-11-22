@@ -1,7 +1,8 @@
 import type { RenderState } from "../canvas/canvas";
-import { Vector2, type AABB } from "./types";
+import { Vector2 } from "../math/vector2";
+import { type AABB } from "./types";
 
-interface Body {
+export interface Body {
   id: string;
   position: Vector2;
   velocity: Vector2;
@@ -10,23 +11,23 @@ interface Body {
   toRenderState: () => RenderState;
 }
 
-class CircleBody implements Body {
-  id: string;
-  position: Vector2;
-  velocity: Vector2;
-  boundingBox: AABB;
-  radius: number;
+// class CircleBody implements Body {
+//   id: string;
+//   position: Vector2;
+//   velocity: Vector2;
+//   boundingBox: AABB;
+//   radius: number;
 
-  constructor(id: string, x: number, y: number, radius: number) {
-    this.id = id;
-    this.position = new Vector2(x, y);
-    this.velocity = new Vector2(0, 0);
-    this.radius = 20;
-    this.boundingBox = {min: new Vector2(x - this.radius, y - this.radius), max: new Vector2(x + this.radius, y + this.radius)}
-  }
-}
+//   constructor(id: string, x: number, y: number, radius: number) {
+//     this.id = id;
+//     this.position = new Vector2(x, y);
+//     this.velocity = new Vector2(0, 0);
+//     this.radius = 20;
+//     this.boundingBox = {min: new Vector2(x - this.radius, y - this.radius), max: new Vector2(x + this.radius, y + this.radius)}
+//   }
+// }
 
-class SquareBody implements Body {
+export class SquareBody implements Body {
   id: string;
   position: Vector2;
   velocity: Vector2;

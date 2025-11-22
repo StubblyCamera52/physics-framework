@@ -8,6 +8,7 @@ export class SquareRenderer implements Renderer {
   }
 
   draw(ctx: CanvasRenderingContext2D, state: RenderState): void {
+    ctx.fillStyle = "#fff";
     ctx.fillRect(state.x-10, state.y-10, 20, 20);
   }
 }

@@ -1,17 +1,4 @@
-interface vec2 {
-  x: number;
-  y: number;
-}
-
-export class Vector2 implements vec2 {
-  x = 0;
-  y = 0;
-
-  constructor(x: number, y: number) {
-    this.x = x;
-    this.y = y;
-  }
-}
+import { Vector2 } from "../math/vector2";
 
 export type AABB = {
   min: Vector2;
