@@ -20,11 +20,20 @@ export class Vector2 implements vec2 {
     return new Vector2(this.x - b.x, this.y - b.y);
   }
 
+  scalarDiv(b: number): Vector2 {
+    return new Vector2(this.x/b, this.y/b);
+  }
+
   dot(b: Vector2): number {
     return (this.x * b.x) + (this.y * b.y);
   }
 
   magnitude(): number {
     return Math.sqrt(this.x*this.x + this.y*this.y);
+  }
+
+  normalize(): Vector2 {
+    const length = this.magnitude();
+    return new Vector2(this.x/length, this.y/length);
   }
 }

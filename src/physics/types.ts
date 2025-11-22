@@ -12,3 +12,8 @@ export function AABBintersectAABB(a: AABB, b: AABB): boolean {
 
   return true;
 }
+
+export type Pair = {
+  a: string; // id
+  b: string;
+}

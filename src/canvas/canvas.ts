@@ -8,6 +8,8 @@ export interface RenderState {
   id: string; // unique id
   x: number;
   y: number;
+  w: number;
+  h: number
 }
 
 export interface Renderer {
@@ -28,6 +30,11 @@ export class Layer {
     if (!this.renderers.has(id)) return;
 
     this.renderers.delete(id);
+  }
+
+  clear(ctx: CanvasRenderingContext2D): void {
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, 300, 300);
   }
 
   draw(ctx: CanvasRenderingContext2D, states: Map<string, RenderState>): void {

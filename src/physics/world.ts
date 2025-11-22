@@ -1,5 +1,7 @@
 import type { RenderState } from "../canvas/canvas";
+import { Vector2 } from "../math/vector2";
 import type { Body } from "./bodies";
+import { AABBintersectAABB, type Pair } from "./types";
 
 interface PhysicsWorld {
   bodies: Map<string, Body>;
@@ -31,7 +33,46 @@ export class StandardWorld implements PhysicsWorld {
   }
   
   update(dt: number): void {
-    return;
+    // update position, velocity, and AABB
+    this.bodies.forEach((b) => {
+      if (b.isStatic) return;
+
+      b.velocity = b.velocity.add(new Vector2(0, 9*dt));
+      b.position = b.position.add(b.velocity);
+      b.boundingBox = {min: b.position.sub(b.size.scalarDiv(2)), max: b.position.add(b.size.scalarDiv(2))};
+    });
+
+    let pairs: Array<Pair> = [];
+
+    const ids = Array.from(this.bodies.keys());
+
+    // i know this is suboptimal ill fix it later
+    for (let i = 0; i < ids.length; i++) {
+      for (let j = i+1; j < ids.length; j++) {
+        pairs.push({a: ids[i], b: ids[j]});
+      }
+    }
+
+    
+    // find colliding aabb
+    pairs = pairs.filter((pair) => {
+      let aabb1 = this.bodies.get(pair.a)?.boundingBox;
+      let aabb2 = this.bodies.get(pair.b)?.boundingBox;
+      if (!aabb1 || !aabb2) return false;
+      
+      return AABBintersectAABB(aabb1, aabb2);
+    });
+
+    console.log(pairs);
+    
+    pairs.forEach((pair) => {
+      let bodyA = this.bodies.get(pair.a);
+      let bodyB = this.bodies.get(pair.b);
+      if (!bodyA || !bodyB) return;
+
+      const collisionNormal = bodyA.position.sub(bodyB.position).normalize();
+      console.log(collisionNormal);
+    });
   }
 
   getState(): Map<string, RenderState> {
