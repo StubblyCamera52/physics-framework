@@ -182,8 +182,8 @@ export class StandardWorld implements PhysicsWorld {
 
         let closest = new Vector2(aToB.x, aToB.y);
 
-        let xExtent = (bodyA.shape.boundingBox.max.x - bodyA.shape.boundingBox.min.x) / 2;
-        let yExtent = (bodyA.shape.boundingBox.max.y - bodyA.shape.boundingBox.min.y) / 2;
+        let xExtent = bodyA.shape.primitive.width / 2;
+        let yExtent = bodyA.shape.primitive.height / 2;
 
         closest.x = clamp(closest.x, -xExtent, xExtent);
         closest.y = clamp(closest.y, -yExtent, yExtent);
@@ -231,10 +231,6 @@ export class StandardWorld implements PhysicsWorld {
       let bodyA = this.bodies.get(manifold.pair.a);
       let bodyB = this.bodies.get(manifold.pair.b);
       if (!bodyA || !bodyB) return;
-
-      // console.log(manifold);
-
-      
       
       let restitution = Math.min(bodyA.properties.restitution, bodyB.properties.restitution);
       
@@ -249,22 +245,22 @@ export class StandardWorld implements PhysicsWorld {
 
       if (velocityAlongNorm < 0) {
         let iScal = -(1 + restitution) * velocityAlongNorm;
-        iScal /= bodyA.data.invMass + bodyB.data.invMass;
+        iScal /= invMassSum;
 
         // apply the impulse
         let impulse = manifold.normal.scalarMul(iScal);
         if (!((bodyA.flags & BodyFlags.Static) === BodyFlags.Static)) {
-          bodyA.velocity = bodyA.velocity.sub(impulse.scalarMul(bodyA.data.invMass));
+          bodyA.velocity = bodyA.velocity.sub(impulse.scalarMul(invMassA));
         }
 
         if (!((bodyB.flags & BodyFlags.Static) === BodyFlags.Static)) {
-          bodyB.velocity = bodyB.velocity.add(impulse.scalarMul(bodyB.data.invMass));
+          bodyB.velocity = bodyB.velocity.add(impulse.scalarMul(invMassB));
         }
       }
 
       // preform position correction to stop "sinking";
       const percent = 0.8;
-      const slop = 0.001;
+      const slop = 0.01;
 
       const depth = Math.max(manifold.penetration - slop, 0);
 

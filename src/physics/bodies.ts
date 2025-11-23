@@ -111,7 +111,9 @@ export class PhysicalProperties {
     this.density = density;
   }
 
-  static readonly ROCK = new this(0.1, 0.5, 0.6);
+  static readonly ROCK = new this(0.3, 0.5, 0.6);
+  static readonly BOUNCY = new this(0.95, 0.2, 0.3);
+  static readonly METAL = new this(0.0, 0.1, 1.2);
 }
 
 export class GenericBody {

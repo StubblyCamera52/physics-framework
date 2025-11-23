@@ -23,7 +23,7 @@ export class CircleRenderer implements Renderer {
   draw(ctx: CanvasRenderingContext2D, state: RenderState): void {
     ctx.fillStyle = "#00f";
     ctx.beginPath();
-    ctx.arc(state.x, state.y, state.w/2, 0, Math.PI*2);
+    ctx.arc(state.x, state.y, state.w, 0, Math.PI*2);
     ctx.fill();
   }
 }
