@@ -38,6 +38,12 @@ export class StandardWorld implements PhysicsWorld {
     if (dt > 0.2) return;
 
     // update position, velocity, and AABB
+
+    this.bodies.forEach((b) => {
+      b.shape.calculateAABB();
+      b.shape.boundingBox.offset(b.position.x, b.position.y);
+    });
+
     this.bodies.forEach((b) => {
       if ((b.flags & BodyFlags.Static) === BodyFlags.Static) return;
 
@@ -240,7 +246,6 @@ export class StandardWorld implements PhysicsWorld {
       
       let relVelocity = bodyB.velocity.sub(bodyA.velocity);
       let velocityAlongNorm = relVelocity.dot(manifold.normal);
-      // console.log(velocityAlongNorm);
 
       if (velocityAlongNorm < 0) {
         let iScal = -(1 + restitution) * velocityAlongNorm;

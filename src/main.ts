@@ -22,6 +22,7 @@ baseLayer.add(new RectRenderer(square1.id));
 let ground = new GenericBody("ground", PhysicalProperties.ROCK, new BodyShape({type: "rect", width: 300, height: 20}));
 ground.setFlags(BodyFlags.Static);
 ground.setPositition(150, 280);
+// ground.setVelocity(0, -200);
 world.insertBody(ground);
 baseLayer.add(new RectRenderer(ground.id));
 
