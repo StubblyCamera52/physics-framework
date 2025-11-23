@@ -1,7 +1,7 @@
 import type { RenderState } from "../canvas/canvas";
 import { clamp } from "../math/helper";
 import { Vector2 } from "../math/vector2";
-import type { Body } from "./bodies";
+import { BodyFlags, type Body } from "./bodies";
 import { AABBintersectAABB, type Pair, type Manifold } from "./types";
 
 interface PhysicsWorld {
@@ -39,14 +39,12 @@ export class StandardWorld implements PhysicsWorld {
 
     // update position, velocity, and AABB
     this.bodies.forEach((b) => {
-      if (b.isStatic) return;
+      if ((b.flags & BodyFlags.Static) === BodyFlags.Static) return;
 
       b.velocity.y += 98 * dt;
       b.position = b.position.add(b.velocity.scalarMul(dt));
-      b.boundingBox = {
-        min: b.position.sub(b.size.scalarDiv(2)),
-        max: b.position.add(b.size.scalarDiv(2)),
-      };
+      b.shape.calculateAABB();
+      b.shape.boundingBox.offset(b.position.x, b.position.y);
     });
     
     for (let i = 0; i < 10; i++) {
@@ -54,11 +52,9 @@ export class StandardWorld implements PhysicsWorld {
       this.resolveCollisions();
       
       this.bodies.forEach((b) => {
-        if (b.isStatic) return;
-        b.boundingBox = {
-          min: b.position.sub(b.size.scalarDiv(2)),
-          max: b.position.add(b.size.scalarDiv(2)),
-        };
+        if ((b.flags & BodyFlags.Static) === BodyFlags.Static) return;
+        b.shape.calculateAABB();
+        b.shape.boundingBox.offset(b.position.x, b.position.y);
       });
     }
   }
@@ -77,8 +73,8 @@ export class StandardWorld implements PhysicsWorld {
 
     // find colliding aabb
     pairs = pairs.filter((pair) => {
-      let aabb1 = this.bodies.get(pair.a)?.boundingBox;
-      let aabb2 = this.bodies.get(pair.b)?.boundingBox;
+      let aabb1 = this.bodies.get(pair.a)?.shape.boundingBox;
+      let aabb2 = this.bodies.get(pair.b)?.shape.boundingBox;
       if (!aabb1 || !aabb2) return false;
 
       return AABBintersectAABB(aabb1, aabb2);
@@ -91,18 +87,18 @@ export class StandardWorld implements PhysicsWorld {
       let bodyB = this.bodies.get(pair.b);
       if (!bodyA || !bodyB) return;
 
-      if (bodyA.primitiveType == "aabb" && bodyB.primitiveType == "aabb") {
+      if (bodyA.shape.primitive.type == "rect" && bodyB.shape.primitive.type == "rect") {
         let aToB = bodyB.position.sub(bodyA.position);
 
-        let aExtent = (bodyA.boundingBox.max.x - bodyA.boundingBox.min.x) / 2;
-        let bExtent = (bodyB.boundingBox.max.x - bodyB.boundingBox.min.x) / 2;
+        let aExtent = (bodyA.shape.boundingBox.max.x - bodyA.shape.boundingBox.min.x) / 2;
+        let bExtent = (bodyB.shape.boundingBox.max.x - bodyB.shape.boundingBox.min.x) / 2;
 
         let overlapX = aExtent + bExtent - Math.abs(aToB.x);
 
         // SAT test x axis
         if (overlapX > 0) {
-          aExtent = (bodyA.boundingBox.max.y - bodyA.boundingBox.min.y) / 2;
-          bExtent = (bodyB.boundingBox.max.y - bodyB.boundingBox.min.y) / 2;
+          aExtent = (bodyA.shape.boundingBox.max.y - bodyA.shape.boundingBox.min.y) / 2;
+          bExtent = (bodyB.shape.boundingBox.max.y - bodyB.shape.boundingBox.min.y) / 2;
 
           let overlapY = aExtent + bExtent - Math.abs(aToB.y);
 
@@ -141,11 +137,11 @@ export class StandardWorld implements PhysicsWorld {
           }
         }
       } else if (
-        bodyA.primitiveType == "circle" &&
-        bodyB.primitiveType == "circle"
+        bodyA.shape.primitive.type == "circle" &&
+        bodyB.shape.primitive.type == "circle"
       ) {
-        let radiusA = bodyA.size.x / 2;
-        let radiusB = bodyB.size.x / 2;
+        let radiusA = bodyA.shape.primitive.radius;
+        let radiusB = bodyB.shape.primitive.radius;
 
         let aToB = bodyB.position.sub(bodyA.position);
 
@@ -172,16 +168,16 @@ export class StandardWorld implements PhysicsWorld {
             normal: new Vector2(0, -1),
           });
         }
-      } else if ((bodyA.primitiveType == "aabb" && bodyB.primitiveType == "circle") || (bodyA.primitiveType == "circle" && bodyB.primitiveType == "aabb")) {
-        if (bodyA.primitiveType == "circle") {
+      } else if ((bodyA.shape.primitive.type == "rect" && bodyB.shape.primitive.type == "circle") || (bodyA.shape.primitive.type == "circle" && bodyB.shape.primitive.type == "rect")) {
+        if (bodyA.shape.primitive.type == "circle") {
           [bodyA, bodyB] = [bodyB, bodyA];
         }
         let aToB = bodyB.position.sub(bodyA.position);
 
         let closest = new Vector2(aToB.x, aToB.y);
 
-        let xExtent = (bodyA.boundingBox.max.x - bodyA.boundingBox.min.x) / 2;
-        let yExtent = (bodyA.boundingBox.max.y - bodyA.boundingBox.min.y) / 2;
+        let xExtent = (bodyA.shape.boundingBox.max.x - bodyA.shape.boundingBox.min.x) / 2;
+        let yExtent = (bodyA.shape.boundingBox.max.y - bodyA.shape.boundingBox.min.y) / 2;
 
         closest.x = clamp(closest.x, -xExtent, xExtent);
         closest.y = clamp(closest.y, -yExtent, yExtent);
@@ -209,7 +205,7 @@ export class StandardWorld implements PhysicsWorld {
 
         let normal = aToB.sub(closest);
         let dist = normal.lengthSquared();
-        let radius = bodyB.size.x/2;
+        let radius = bodyB.shape.primitive.radius;
 
         if (dist > (radius*radius) && !inside) return false;
 
@@ -234,10 +230,10 @@ export class StandardWorld implements PhysicsWorld {
 
       
       
-      let restitution = Math.min(bodyA.restitution, bodyB.restitution);
+      let restitution = Math.min(bodyA.properties.restitution, bodyB.properties.restitution);
       
-      const invMassA = bodyA.isStatic ? 0 : 1 / bodyA.mass;
-      const invMassB = bodyB.isStatic ? 0 : 1 / bodyB.mass;
+      const invMassA = ((bodyA.flags & BodyFlags.Static) === BodyFlags.Static) ? 0 : bodyA.data.invMass;
+      const invMassB = ((bodyB.flags & BodyFlags.Static) === BodyFlags.Static) ? 0 : bodyB.data.invMass;
       
       const invMassSum = invMassA + invMassB;
       if (invMassSum == 0) return; // both are static bodies
@@ -248,16 +244,16 @@ export class StandardWorld implements PhysicsWorld {
 
       if (velocityAlongNorm < 0) {
         let iScal = -(1 + restitution) * velocityAlongNorm;
-        iScal /= 1 / bodyA.mass + 1 / bodyB.mass;
+        iScal /= bodyA.data.invMass + bodyB.data.invMass;
 
         // apply the impulse
         let impulse = manifold.normal.scalarMul(iScal);
-        if (!bodyA.isStatic) {
-          bodyA.velocity = bodyA.velocity.sub(impulse.scalarMul(1 / bodyA.mass));
+        if (!((bodyA.flags & BodyFlags.Static) === BodyFlags.Static)) {
+          bodyA.velocity = bodyA.velocity.sub(impulse.scalarMul(bodyA.data.invMass));
         }
 
-        if (!bodyB.isStatic) {
-          bodyB.velocity = bodyB.velocity.add(impulse.scalarMul(1 / bodyB.mass));
+        if (!((bodyB.flags & BodyFlags.Static) === BodyFlags.Static)) {
+          bodyB.velocity = bodyB.velocity.add(impulse.scalarMul(bodyB.data.invMass));
         }
       }
 
@@ -271,11 +267,11 @@ export class StandardWorld implements PhysicsWorld {
         const correctionAmount = (depth * percent) / invMassSum;
         const correction = manifold.normal.scalarMul(correctionAmount);
 
-        if (!bodyA.isStatic) {
+        if (!((bodyA.flags & BodyFlags.Static) === BodyFlags.Static)) {
           bodyA.position = bodyA.position.sub(correction.scalarMul(invMassA));
         }
   
-        if (!bodyB.isStatic) {
+        if (!((bodyB.flags & BodyFlags.Static) === BodyFlags.Static)) {
           bodyB.position = bodyB.position.add(correction.scalarMul(invMassB));
         }
       }
@@ -285,7 +281,7 @@ export class StandardWorld implements PhysicsWorld {
   getState(): Map<string, RenderState> {
     let renderStates = new Map<string, RenderState>();
     this.bodies.forEach((body, id) => {
-      renderStates.set(id, body.toRenderState());
+      renderStates.set(id, body.shape.toRenderState(body.position, body.id));
     });
 
     return renderStates;

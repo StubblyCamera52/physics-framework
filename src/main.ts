@@ -1,6 +1,6 @@
 import { Layer } from "./canvas/canvas";
 import { CircleRenderer, RectRenderer } from "./canvas/shapes";
-import { CircleBody, SquareBody, StaticRectBody } from "./physics/bodies";
+import { BodyFlags, BodyShape, GenericBody, PhysicalProperties } from "./physics/bodies";
 import { StandardWorld } from "./physics/world";
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -14,40 +14,39 @@ if (ctx != null) {
 let world = new StandardWorld();
 let baseLayer = new Layer();
 
-let square1 = new SquareBody("1", 150, 250, 20);
-square1.velocity.x = 10;
-let squareRenderer1 = new RectRenderer(square1.id);
-
-let square2 = new SquareBody("2", 250, 50, 20);
-let squareRenderer2 = new RectRenderer(square2.id);
-
-baseLayer.add(squareRenderer1);
+let square1 = new GenericBody("square1", PhysicalProperties.ROCK, BodyShape.SQUARE_20);
+square1.setPositition(150, 80);
 world.insertBody(square1);
-baseLayer.add(squareRenderer2);
-world.insertBody(square2);
+baseLayer.add(new RectRenderer(square1.id));
 
-let ground = new StaticRectBody("ground", 150, 300, 300, 20);
-let ceiling = new StaticRectBody("ceiling", 150, 0, 300, 20);
-let wall1 = new StaticRectBody("wall1", 0, 150, 20, 300);
-let wall2 = new StaticRectBody("wall2", 300, 150, 20, 300);
-baseLayer.add(new RectRenderer(wall1.id));
-baseLayer.add(new RectRenderer(wall2.id));
-baseLayer.add(new RectRenderer(ground.id));
-baseLayer.add(new RectRenderer(ceiling.id));
+let ground = new GenericBody("ground", PhysicalProperties.ROCK, new BodyShape({type: "rect", width: 300, height: 20}));
+ground.setFlags(BodyFlags.Static);
+ground.setPositition(150, 280);
 world.insertBody(ground);
-world.insertBody(ceiling);
-world.insertBody(wall1);
-world.insertBody(wall2);
+baseLayer.add(new RectRenderer(ground.id));
 
-for (let i = 0; i < 91; i++) {
-  let x = (i % 13)*20 + 30;
-  let y = Math.floor(i/13)*20+30;
+// let ground = new StaticRectBody("ground", 150, 300, 300, 20);
+// let ceiling = new StaticRectBody("ceiling", 150, 0, 300, 20);
+// let wall1 = new StaticRectBody("wall1", 0, 150, 20, 300);
+// let wall2 = new StaticRectBody("wall2", 300, 150, 20, 300);
+// baseLayer.add(new RectRenderer(wall1.id));
+// baseLayer.add(new RectRenderer(wall2.id));
+// baseLayer.add(new RectRenderer(ground.id));
+// baseLayer.add(new RectRenderer(ceiling.id));
+// world.insertBody(ground);
+// world.insertBody(ceiling);
+// world.insertBody(wall1);
+// world.insertBody(wall2);
 
-  let ball = new CircleBody("ball".concat(i.toString()), x, y, 20);
-  ball.velocity.x = (Math.random()-0.5)*100 
-  baseLayer.add(new CircleRenderer("ball".concat(i.toString())));
-  world.insertBody(ball);
-}
+// for (let i = 0; i < 91; i++) {
+//   let x = (i % 13)*20 + 30;
+//   let y = Math.floor(i/13)*20+30;
+
+//   let ball = new CircleBody("ball".concat(i.toString()), x, y, 20);
+//   ball.velocity.x = (Math.random()-0.5)*100 
+//   baseLayer.add(new CircleRenderer("ball".concat(i.toString())));
+//   world.insertBody(ball);
+// }
 
 if (ctx != null) {
   baseLayer.draw(ctx, world.getState());

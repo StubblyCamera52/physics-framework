@@ -7,7 +7,12 @@ export class Vector2 implements vec2 {
   x = 0;
   y = 0;
 
-  constructor(x: number, y: number) {
+  constructor(x?: number, y?: number) {
+    this.x = x ?? 0;
+    this.y = y ?? 0;
+  }
+
+  set(x: number, y: number) {
     this.x = x;
     this.y = y;
   }
