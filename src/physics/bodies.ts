@@ -75,7 +75,7 @@ export class StaticRectBody implements Body {
   boundingBox: AABB;
   size: Vector2;
   isStatic = true;
-  mass = 9999;
+  mass = 1;
   restitution = 0.2;
   primitiveType = "aabb" as "aabb";
 

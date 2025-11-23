@@ -174,9 +174,7 @@ export class StandardWorld implements PhysicsWorld {
         }
       } else if ((bodyA.primitiveType == "aabb" && bodyB.primitiveType == "circle") || (bodyA.primitiveType == "circle" && bodyB.primitiveType == "aabb")) {
         if (bodyA.primitiveType == "circle") {
-          let temp = structuredClone(bodyA);
-          bodyA = structuredClone(bodyB);
-          bodyB = structuredClone(temp);
+          [bodyA, bodyB] = [bodyB, bodyA];
         }
         let aToB = bodyB.position.sub(bodyA.position);
 
@@ -234,22 +232,34 @@ export class StandardWorld implements PhysicsWorld {
 
       // console.log(manifold);
 
+      
+      
+      let restitution = Math.min(bodyA.restitution, bodyB.restitution);
+      
+      const invMassA = bodyA.isStatic ? 0 : 1 / bodyA.mass;
+      const invMassB = bodyB.isStatic ? 0 : 1 / bodyB.mass;
+      
+      const invMassSum = invMassA + invMassB;
+      if (invMassSum == 0) return; // both are static bodies
+      
       let relVelocity = bodyB.velocity.sub(bodyA.velocity);
       let velocityAlongNorm = relVelocity.dot(manifold.normal);
       // console.log(velocityAlongNorm);
-      if (velocityAlongNorm > 0) return; // do not resolve if the bodies are already seperating
 
+      if (velocityAlongNorm < 0) {
+        let iScal = -(1 + restitution) * velocityAlongNorm;
+        iScal /= 1 / bodyA.mass + 1 / bodyB.mass;
 
-      let restitution = Math.min(bodyA.restitution, bodyB.restitution);
+        // apply the impulse
+        let impulse = manifold.normal.scalarMul(iScal);
+        if (!bodyA.isStatic) {
+          bodyA.velocity = bodyA.velocity.sub(impulse.scalarMul(1 / bodyA.mass));
+        }
 
-      // impulse scalar
-      let iScal = -(1 + restitution) * velocityAlongNorm;
-      iScal /= 1 / bodyA.mass + 1 / bodyB.mass;
-
-      // apply the impulse
-      let impulse = manifold.normal.scalarMul(iScal);
-      bodyA.velocity = bodyA.velocity.sub(impulse.scalarMul(1 / bodyA.mass));
-      bodyB.velocity = bodyB.velocity.add(impulse.scalarMul(1 / bodyB.mass));
+        if (!bodyB.isStatic) {
+          bodyB.velocity = bodyB.velocity.add(impulse.scalarMul(1 / bodyB.mass));
+        }
+      }
 
       // preform position correction to stop "sinking";
       const percent = 0.8;
@@ -257,21 +267,17 @@ export class StandardWorld implements PhysicsWorld {
 
       const depth = Math.max(manifold.penetration - slop, 0);
 
-      const invMassA = bodyA.isStatic ? 0 : 1 / bodyA.mass;
-      const invMassB = bodyB.isStatic ? 0 : 1 / bodyB.mass;
+      if (depth > 0) {
+        const correctionAmount = (depth * percent) / invMassSum;
+        const correction = manifold.normal.scalarMul(correctionAmount);
 
-      const invMassSum = invMassA + invMassB;
-      if (invMassSum == 0) return; // both are static bodies
-
-      const correctionAmount = (depth * percent) / invMassSum;
-      const correction = manifold.normal.scalarMul(correctionAmount);
-
-      if (!bodyA.isStatic) {
-        bodyA.position = bodyA.position.sub(correction.scalarMul(invMassA));
-      }
-
-      if (!bodyB.isStatic) {
-        bodyB.position = bodyB.position.add(correction.scalarMul(invMassB));
+        if (!bodyA.isStatic) {
+          bodyA.position = bodyA.position.sub(correction.scalarMul(invMassA));
+        }
+  
+        if (!bodyB.isStatic) {
+          bodyB.position = bodyB.position.add(correction.scalarMul(invMassB));
+        }
       }
     });
   }
