@@ -34,9 +34,6 @@ export class BodyShape {
     this.calculateAABB();
   }
 
-  static readonly SQUARE_20 = new this({type: "rect", width: 20, height: 20});
-  static readonly CIRCLE_20 = new this({type: "circle", radius: 10});
-
   toRenderState(pos: Vector2, id: string): RenderState {
     switch (this.primitive.type) {
       case "rect":
