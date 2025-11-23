@@ -40,11 +40,6 @@ export class StandardWorld implements PhysicsWorld {
     // update position, velocity, and AABB
 
     this.bodies.forEach((b) => {
-      b.shape.calculateAABB();
-      b.shape.boundingBox.offset(b.position.x, b.position.y);
-    });
-
-    this.bodies.forEach((b) => {
       if ((b.flags & BodyFlags.Static) === BodyFlags.Static) return;
 
       b.velocity.y += 98 * dt;
@@ -62,6 +57,7 @@ export class StandardWorld implements PhysicsWorld {
         b.shape.calculateAABB();
         b.shape.boundingBox.offset(b.position.x, b.position.y);
       });
+      
     }
   }
 
@@ -83,7 +79,22 @@ export class StandardWorld implements PhysicsWorld {
       let aabb2 = this.bodies.get(pair.b)?.shape.boundingBox;
       if (!aabb1 || !aabb2) return false;
 
-      return AABBintersectAABB(aabb1, aabb2);
+      const intersect =  AABBintersectAABB(aabb1, aabb2);
+
+      // if (
+      //   (pair.a === "wall1" || pair.a === "wall2") &&
+      //   pair.b.startsWith("ball")
+      // ) {
+      //   console.log(`${pair.a} vs ${pair.b}: intersects=${intersect}`);
+      //   console.log(
+      //     `  ${pair.a} bbox: min(${aabb1.min.x}, ${aabb1.min.y}) max(${aabb1.max.x}, ${aabb1.max.y})`
+      //   );
+      //   console.log(
+      //     `  ${pair.b} bbox: min(${aabb2.min.x}, ${aabb2.min.y}) max(${aabb2.max.x}, ${aabb2.max.y})`
+      //   );
+      // }
+
+      return intersect;
     });
 
     this.collisions.clear();

@@ -133,7 +133,7 @@ export class GenericBody {
     this.properties = properties;
 
     let mass = this.shape.calculateMass(this.properties.density);
-    this.data = {mass, invMass: 1/mass, intertia: 0, invIntertia: 0};
+    this.data = {mass, invMass: (1/mass), intertia: 0, invIntertia: 0};
   }
 
   setFlags(flags: BodyFlags) {
@@ -151,6 +151,8 @@ export class GenericBody {
   setPositition(x: number, y: number) {
     this.position.x = x;
     this.position.y = y;
+    this.shape.calculateAABB();
+    this.shape.boundingBox.offset(this.position.x, this.position.y);
   }
 
   setVelocity(x: number, y: number) {

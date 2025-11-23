@@ -63,13 +63,13 @@ world.insertBody(wall2);
 baseLayer.add(new RectRenderer(wall2.id));
 
 for (let i = 0; i < 21; i++) {
-  let x = (i % 7) * 30 + 60;
-  let y = Math.floor(i / 7) * 20 + 60;
+  let x = (i % 5) * 30 + 60;
+  let y = Math.floor(i / 5) * 20 + 60;
 
   let ball = new GenericBody(
     "ball".concat(i.toString()),
     PhysicalProperties.ROCK,
-    BodyShape.SQUARE_20,
+    new BodyShape({type: "rect", width: 20, height: 20}),
   );
   ball.velocity.x = (Math.random() - 0.5) * 100;
   ball.setPositition(x, y);
