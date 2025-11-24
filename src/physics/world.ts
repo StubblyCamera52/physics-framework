@@ -37,12 +37,26 @@ export class StandardWorld implements PhysicsWorld {
   update(dt: number): void {
     if (dt > 0.2) return;
 
+    // integration
+    this.bodies.forEach((b) => {
+      if ((b.flags & BodyFlags.Static) === BodyFlags.Static) return;
+      b.force.y += b.data.mass*98;
+    });
+    
+    // f=ma
+    this.bodies.forEach((b) => {
+      if ((b.flags & BodyFlags.Static) === BodyFlags.Static) return;
+      
+      const acceleration = b.force.scalarMul(b.data.invMass);
+      b.velocity = b.velocity.add(acceleration.scalarMul(dt));
+
+      b.force.set(0, 0);
+    });
+
     // update position, velocity, and AABB
 
     this.bodies.forEach((b) => {
       if ((b.flags & BodyFlags.Static) === BodyFlags.Static) return;
-
-      b.velocity.y += 98 * dt;
       b.position = b.position.add(b.velocity.scalarMul(dt));
       b.shape.calculateAABB();
       b.shape.boundingBox.offset(b.position.x, b.position.y);
