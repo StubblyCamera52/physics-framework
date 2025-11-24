@@ -10,6 +10,7 @@ Every single body has properties and the solver uses those properties to figure 
 
 ## Usage
 If you want to see the demo just go to https://stubblycamera52.github.io/physics-framework.
+click and drag the balls or squares to move them.
 
 Otherwise to use this in your own script (if you even wanted to). You can look at main.ts to see an example.
 

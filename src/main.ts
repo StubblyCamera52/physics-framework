@@ -1,5 +1,6 @@
 import { Layer } from "./canvas/canvas";
 import { CircleRenderer, RectRenderer } from "./canvas/shapes";
+import { clamp } from "./math/helper";
 import { Vector2 } from "./math/vector2";
 import {
   BodyFlags,
@@ -66,18 +67,19 @@ wall2.setPositition(20, 300);
 world.insertBody(wall2);
 baseLayer.add(new RectRenderer(wall2.id));
 
-for (let i = 0; i < 70; i++) {
-  let x = (i % 7) * 30 + 60;
-  let y = Math.floor(i / 7) * 20 + 60;
+for (let i = 0; i < 300; i++) {
+  let x = (i % 17) * 30 + 60;
+  let y = Math.floor(i / 17) * 20 + 60;
+  
 
   let ball = new GenericBody(
     "ball".concat(i.toString()),
     PhysicalProperties.ROCK,
-    new BodyShape({type: "circle", radius: 10}),
+    new BodyShape(Math.random() < 0.5 ? {type: "circle", radius: clamp(Math.random()*20, 10, 20)} : {type: "rect", height: clamp(Math.random()*30, 20, 30), width: clamp(Math.random()*30, 20, 30)}),
   );
   ball.velocity.x = (Math.random() - 0.5) * 100;
   ball.setPositition(x+Math.random(), y+Math.random());
-  baseLayer.add(new CircleRenderer("ball".concat(i.toString())));
+  baseLayer.add(ball.shape.primitive.type == "rect" ? new RectRenderer("ball".concat(i.toString())) : new CircleRenderer("ball".concat(i.toString())));
   world.insertBody(ball);
 }
 
