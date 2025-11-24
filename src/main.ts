@@ -1,5 +1,6 @@
 import { Layer } from "./canvas/canvas";
 import { CircleRenderer, RectRenderer } from "./canvas/shapes";
+import { Vector2 } from "./math/vector2";
 import {
   BodyFlags,
   BodyShape,
@@ -11,9 +12,12 @@ import { StandardWorld } from "./physics/world";
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d");
 
+let selectedId = "";
+let mousePos = new Vector2();
+
 if (ctx != null) {
   ctx.fillStyle = "#000000";
-  ctx.fillRect(0, 0, 300, 300);
+  ctx.fillRect(0, 0, 600, 600);
 }
 
 let world = new StandardWorld();
@@ -27,38 +31,38 @@ let baseLayer = new Layer();
 let ground = new GenericBody(
   "ground",
   PhysicalProperties.ROCK,
-  new BodyShape({ type: "rect", width: 300, height: 20 }),
+  new BodyShape({ type: "rect", width: 600, height: 20 }),
 );
 ground.setFlags(BodyFlags.Static);
-ground.setPositition(150, 280);
+ground.setPositition(300, 580);
 // ground.setVelocity(0, -200);
 world.insertBody(ground);
 baseLayer.add(new RectRenderer(ground.id));
 let ceiling = new GenericBody(
   "ceiling",
   PhysicalProperties.ROCK,
-  new BodyShape({ type: "rect", width: 300, height: 20 }),
+  new BodyShape({ type: "rect", width: 600, height: 20 }),
 );
 ceiling.setFlags(BodyFlags.Static);
-ceiling.setPositition(150, 20);
+ceiling.setPositition(300, 20);
 world.insertBody(ceiling);
 baseLayer.add(new RectRenderer(ceiling.id));
 let wall1 = new GenericBody(
   "wall1",
   PhysicalProperties.ROCK,
-  new BodyShape({ type: "rect", width: 20, height: 300 }),
+  new BodyShape({ type: "rect", width: 20, height: 600 }),
 );
 wall1.setFlags(BodyFlags.Static);
-wall1.setPositition(280, 150);
+wall1.setPositition(580, 300);
 world.insertBody(wall1);
 baseLayer.add(new RectRenderer(wall1.id));
 let wall2 = new GenericBody(
   "wall2",
   PhysicalProperties.ROCK,
-  new BodyShape({ type: "rect", width: 20, height: 300 }),
+  new BodyShape({ type: "rect", width: 20, height: 600 }),
 );
 wall2.setFlags(BodyFlags.Static);
-wall2.setPositition(20, 150);
+wall2.setPositition(20, 300);
 world.insertBody(wall2);
 baseLayer.add(new RectRenderer(wall2.id));
 
@@ -91,6 +95,12 @@ function animate(timestamp: number) {
 
   // console.log(dt/1000);
 
+  let selectedBody = world.bodies.get(selectedId);
+
+  if (selectedBody) {
+    selectedBody.force = selectedBody.force.add(mousePos.sub(selectedBody.position).scalarMul(10*selectedBody.data.mass));
+  }
+
   world.update(dt / 1000);
 
   if (ctx != null) {
@@ -102,5 +112,19 @@ function animate(timestamp: number) {
 
   requestAnimationFrame(animate);
 }
+
+canvas.addEventListener("mousedown", (e) => {
+  selectedId = baseLayer.getBodyAtPosition(e.offsetX, e.offsetY);
+  console.log(selectedId);
+});
+
+canvas.addEventListener("mousemove", (e) => {
+  mousePos.set(e.offsetX, e.offsetY);
+});
+
+canvas.addEventListener("mouseup", () => {
+  selectedId = "";
+  console.log(selectedId);
+});
 
 requestAnimationFrame(animate);

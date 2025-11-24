@@ -1,3 +1,6 @@
+import { Vector2 } from "../math/vector2";
+import { AABB, AABBintersectAABB } from "../physics/types";
+
 export interface CanvasOptions {
   width?: number;
   height?: number;
@@ -19,6 +22,7 @@ export interface Renderer {
 
 export class Layer {
   renderers: Map<string, Renderer> = new Map();
+  states = new Map<string, RenderState>;
 
   add(renderer: Renderer): void {
     if (this.renderers.has(renderer.id)) return;
@@ -34,12 +38,29 @@ export class Layer {
 
   clear(ctx: CanvasRenderingContext2D): void {
     ctx.fillStyle = "#000";
-    ctx.fillRect(0, 0, 300, 300);
+    ctx.fillRect(0, 0, 600, 600);
   }
 
-  getSelectedBody(x: number, y: number): string;
+  getBodyAtPosition(x: number, y: number): string {
+    let testAABB = new AABB(new Vector2(x-2, y-2), new Vector2(x+2, y+2));
+    let shapeAABB = new AABB(new Vector2(), new Vector2());
+    let bodyId = "";
+    let found = false;
+    this.states.forEach((state, key) => {
+      if (found) return;
+      shapeAABB.setFromSize(state.w, state.h);
+      shapeAABB.offset(state.x, state.y);
+      if (AABBintersectAABB(testAABB, shapeAABB)) {
+        bodyId = key;
+        found = true;
+      }
+    });
+
+    return bodyId;
+  }
 
   draw(ctx: CanvasRenderingContext2D, states: Map<string, RenderState>): void {
+    this.states = states;
     states.forEach((state, id) => {
         this.renderers.get(id)?.draw(ctx, state);
     });
