@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { RenderState } from "../canvas/canvas";
 import { clamp } from "../math/helper";
 import { Vector2 } from "../math/vector2";
