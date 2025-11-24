@@ -71,7 +71,7 @@ for (let i = 0; i < 70; i++) {
     PhysicalProperties.ROCK,
     new BodyShape({type: "circle", radius: 10}),
   );
-  // ball.velocity.x = (Math.random() - 0.5) * 100;
+  ball.velocity.x = (Math.random() - 0.5) * 100;
   ball.setPositition(x+Math.random(), y+Math.random());
   baseLayer.add(new CircleRenderer("ball".concat(i.toString())));
   world.insertBody(ball);

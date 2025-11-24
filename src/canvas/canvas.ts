@@ -37,6 +37,8 @@ export class Layer {
     ctx.fillRect(0, 0, 300, 300);
   }
 
+  getSelectedBody(x: number, y: number): string;
+
   draw(ctx: CanvasRenderingContext2D, states: Map<string, RenderState>): void {
     states.forEach((state, id) => {
         this.renderers.get(id)?.draw(ctx, state);

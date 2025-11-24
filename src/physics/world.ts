@@ -22,6 +22,10 @@ export class StandardWorld implements PhysicsWorld {
     this.bodies = new Map<string, Body>();
   }
 
+  getBody(id: string): Body | undefined {
+    return this.bodies.get(id);
+  }
+
   insertBody(body: Body): void {
     if (!this.bodies.has(body.id)) {
       this.bodies.set(body.id, body);
@@ -258,6 +262,7 @@ export class StandardWorld implements PhysicsWorld {
       if (!bodyA || !bodyB) return;
       
       let restitution = Math.min(bodyA.properties.restitution, bodyB.properties.restitution);
+      let friction = Math.sqrt(bodyA.properties.friction*bodyB.properties.friction);
       
       const invMassA = ((bodyA.flags & BodyFlags.Static) === BodyFlags.Static) ? 0 : bodyA.data.invMass;
       const invMassB = ((bodyB.flags & BodyFlags.Static) === BodyFlags.Static) ? 0 : bodyB.data.invMass;
@@ -280,6 +285,33 @@ export class StandardWorld implements PhysicsWorld {
 
         if (!((bodyB.flags & BodyFlags.Static) === BodyFlags.Static)) {
           bodyB.velocity = bodyB.velocity.add(impulse.scalarMul(invMassB));
+        }
+
+        // friction impulse
+        relVelocity = bodyB.velocity.sub(bodyA.velocity);
+
+        let tangent = relVelocity.sub(manifold.normal.scalarMul(relVelocity.dot(manifold.normal)));
+
+        // div/0 is bad
+        if (tangent.lengthSquared() > 0.001) {
+          tangent = tangent.normalize();
+
+          let frictionMagnitude = -relVelocity.dot(tangent) / invMassSum;
+
+          let normalForce = Math.abs(iScal);
+          let maxFriction = friction*normalForce;
+
+          frictionMagnitude = clamp(frictionMagnitude, -maxFriction, maxFriction);
+
+          let frictionImpulse = tangent.scalarMul(frictionMagnitude);
+
+          if (!((bodyA.flags & BodyFlags.Static) == BodyFlags.Static)) {
+            bodyA.velocity = bodyA.velocity.sub(frictionImpulse.scalarMul(invMassA));
+          }
+
+          if (!((bodyB.flags & BodyFlags.Static) == BodyFlags.Static)) {
+            bodyB.velocity = bodyB.velocity.add(frictionImpulse.scalarMul(invMassB))
+          }
         }
       }
 
