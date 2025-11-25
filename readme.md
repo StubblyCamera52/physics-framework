@@ -1,6 +1,9 @@
 # typescript physics framework
 
+<img width="601" height="605" alt="Screenshot 2025-11-24 at 6 42 34 PM" src="https://github.com/user-attachments/assets/891c1cbf-f02d-48fe-85b7-daad314f3b5d" />
+
 ## About
+
 
 I wanted to make a physics "engine" so I can learn how they work, and the theme of this week was framework so this is a perfect project for that. I ran into 4000 bugs while doing this (not all of them were fixed). I was a nightmare, however I did learn how the basics of physics engines work so I gained something.
 
